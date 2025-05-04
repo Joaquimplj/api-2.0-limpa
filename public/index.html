@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importar Produto para Shopify</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #181c24;
+      color: #f3f3f3;
+      margin: 0;
+      min-height: 100vh;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #232836;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 14px 0 10px 0;
+      cursor: pointer;
+      background: #232836;
+      color: #b0b8c9;
+      font-size: 16px;
+      border: none;
+      outline: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .tab.active {
+      background: #181c24;
+      color: #7ecfff;
+      border-bottom: 2px solid #7ecfff;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 420px;
+      margin: 48px auto;
+      background: #232836;
+      padding: 32px 28px 28px 28px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #0005;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #7ecfff;
+      letter-spacing: 1px;
+    }
+    label {
+      display: block;
+      margin-top: 18px;
+      color: #b0b8c9;
+      font-size: 15px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid #2c3242;
+      background: #232836;
+      color: #f3f3f3;
+      font-size: 15px;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus {
+      border: 1.5px solid #7ecfff;
+      outline: none;
+    }
+    button {
+      margin-top: 28px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(90deg, #0070f3 60%, #00c6ff 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #0070f355;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #005bb5 60%, #0099cc 100%);
+      box-shadow: 0 4px 16px #0070f355;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #232836;
+      border-radius: 4px;
+      margin-top: 24px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0070f3 60%, #00c6ff 100%);
+      border-radius: 4px;
+      transition: width 0.4s cubic-bezier(.4,1.4,.6,1);
+    }
+    .result {
+      margin-top: 24px;
+      padding: 14px;
+      border-radius: 6px;
+      background: #1e242f;
+      color: #7ecfff;
+      font-size: 15px;
+      word-break: break-word;
+      box-shadow: 0 2px 8px #0002;
+      display: none;
+    }
+    .error {
+      background: #3a1e1e;
+      color: #ff7e7e;
+      border: 1px solid #a00;
+    }
+    .loja-lista {
+      margin-top: 12px;
+      margin-bottom: 8px;
+      background: #232836;
+      border-radius: 6px;
+      padding: 8px 0 0 0;
+    }
+    .loja-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0 6px 0;
+      border-bottom: 1px solid #232836;
+    }
+    .loja-item:last-child { border-bottom: none; }
+    .loja-nome {
+      color: #7ecfff;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .loja-btns button {
+      background: #232836;
+      color: #ff7e7e;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .loja-btns button:hover {
+      background: #3a1e1e;
+      color: #fff;
+    }
+    @media (max-width: 500px) {
+      .container { padding: 18px 6vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" id="tabImportar">Importar Produto (com IA)</button>
+      <button class="tab" id="tabImportarSimples">Importar Produto (Simples)</button>
+      <button class="tab" id="tabLojas">Minhas Lojas</button>
+      <button class="tab" id="tabColecao">Importar Coleção</button>
+      <button class="tab" id="tabClonar">Clonar Loja Inteira</button>
+    </div>
+    <div id="importarSection">
+      <h2>Importar Produto para Shopify (com IA)</h2>
+      <form id="importFormIA">
+        <label for="lojaSalva">Escolher loja salva</label>
+        <select id="lojaSalva" name="lojaSalva">
+          <option value="">-- Nenhuma --</option>
+        </select>
+        <label for="shopifyStoreUrl">Domínio da loja Shopify</label>
+        <input type="text" id="shopifyStoreUrl" name="shopifyStoreUrl" placeholder="ex: sua-loja.myshopify.com" required>
+        <label for="shopifyAccessToken">Token de acesso Shopify</label>
+        <input type="text" id="shopifyAccessToken" name="shopifyAccessToken" required>
+        <label for="productUrl">URL do produto</label>
+        <input type="text" id="productUrl" name="productUrl" required>
+        <label for="sourcePlatform">Plataforma de origem</label>
+        <select id="sourcePlatform" name="sourcePlatform" required>
+          <option value="shopify">Shopify</option>
+          <option value="yano">Yano</option>
+          <option value="nuvemshop">Nuvem Shop</option>
+        </select>
+        <button type="submit" id="importarProdutoBtnIA">Importar Produto com IA</button>
+      </form>
+      <div id="resultIA" class="result"></div>
+    </div>
+    <div id="importarSimplesSection" style="display:none;">
+      <h2>Importar Produto para Shopify (Simples, sem IA)</h2>
+      <form id="importFormSimples">
+        <label for="lojaSalvaSimples">Escolher loja salva</label>
+        <select id="lojaSalvaSimples" name="lojaSalvaSimples">
+          <option value="">-- Nenhuma --</option>
+        </select>
+        <label for="shopifyStoreUrlSimples">Domínio da loja Shopify</label>
+        <input type="text" id="shopifyStoreUrlSimples" name="shopifyStoreUrlSimples" placeholder="ex: sua-loja.myshopify.com" required>
+        <label for="shopifyAccessTokenSimples">Token de acesso Shopify</label>
+        <input type="text" id="shopifyAccessTokenSimples" name="shopifyAccessTokenSimples" required>
+        <label for="productUrlSimples">URL do produto</label>
+        <input type="text" id="productUrlSimples" name="productUrlSimples" required>
+        <label for="sourcePlatformSimples">Plataforma de origem</label>
+        <select id="sourcePlatformSimples" name="sourcePlatformSimples" required>
+          <option value="shopify">Shopify</option>
+          <option value="yano">Yano</option>
+          <option value="nuvemshop">Nuvem Shop</option>
+        </select>
+        <button type="submit" id="importarProdutoBtnSimples">Importar Produto Simples</button>
+      </form>
+      <div id="resultSimples" class="result"></div>
+    </div>
+    <div id="lojasSection" style="display:none;">
+      <h2>Minhas Lojas</h2>
+      <form id="lojaForm">
+        <label for="lojaNome">Nome da loja (opcional)</label>
+        <input type="text" id="lojaNome" name="lojaNome" placeholder="Minha loja Shopify">
+        <label for="lojaDominio">Domínio da loja Shopify</label>
+        <input type="text" id="lojaDominio" name="lojaDominio" placeholder="ex: sua-loja.myshopify.com" required>
+        <label for="lojaToken">Token de acesso Shopify</label>
+        <input type="text" id="lojaToken" name="lojaToken" required>
+        <button type="submit">Salvar Loja</button>
+      </form>
+      <div class="loja-lista" id="lojaLista"></div>
+    </div>
+    <div id="colecaoSection" style="display:none;">
+      <h2>Importar Coleção para Shopify</h2>
+      <form id="colecaoForm">
+        <label for="lojaSalvaColecao">Escolher loja salva</label>
+        <select id="lojaSalvaColecao" name="lojaSalvaColecao">
+          <option value="">-- Nenhuma --</option>
+        </select>
+        <label for="shopifyStoreUrlColecao">Domínio da loja Shopify</label>
+        <input type="text" id="shopifyStoreUrlColecao" name="shopifyStoreUrlColecao" placeholder="ex: sua-loja.myshopify.com" required>
+        <label for="shopifyAccessTokenColecao">Token de acesso Shopify</label>
+        <input type="text" id="shopifyAccessTokenColecao" name="shopifyAccessTokenColecao" required>
+        <label for="collectionUrl">URL da coleção</label>
+        <input type="text" id="collectionUrl" name="collectionUrl" required>
+        <label for="sourcePlatformColecao">Plataforma de origem</label>
+        <select id="sourcePlatformColecao" name="sourcePlatformColecao" required>
+          <option value="shopify">Shopify</option>
+          <option value="yano">Yano</option>
+          <option value="nuvemshop">Nuvem Shop</option>
+        </select>
+        <label><input type="checkbox" id="gerarCopyIAColecao" name="gerarCopyIAColecao"> Gerar nova copy com IA</label>
+        <button type="submit" id="importarColecaoBtn">Importar Coleção</button>
+        <button type="button" id="cancelarColecaoBtn" style="display:none;margin-top:10px;background:#ff7e7e;">Cancelar</button>
+      </form>
+      <div class="progress-bar-bg" id="progressBarBgColecao">
+        <div class="progress-bar" id="progressBarColecao"></div>
+      </div>
+      <div id="progressTextColecao" style="text-align:center;color:#7ecfff;font-size:15px;margin-top:8px;display:none;">Aguarde, importando produtos...</div>
+      <div id="progressDelayColecao" style="text-align:center;color:#ffb347;font-size:14px;margin-top:4px;display:none;">Isso pode levar alguns minutos dependendo do tamanho da coleção.</div>
+      <div id="resultColecao" class="result"></div>
+    </div>
+    <div id="clonarSection" style="display:none;">
+      <h2>Clonar Loja Inteira</h2>
+      <form id="clonarForm">
+        <label for="lojaSalvaClonar">Escolher loja destino salva</label>
+        <select id="lojaSalvaClonar" name="lojaSalvaClonar">
+          <option value="">-- Nenhuma --</option>
+        </select>
+        <label for="shopifyStoreUrlClonar">Domínio da loja Shopify</label>
+        <input type="text" id="shopifyStoreUrlClonar" name="shopifyStoreUrlClonar" placeholder="ex: sua-loja.myshopify.com" required>
+        <label for="shopifyAccessTokenClonar">Token de acesso Shopify</label>
+        <input type="text" id="shopifyAccessTokenClonar" name="shopifyAccessTokenClonar" required>
+        <label for="sourceStoreUrl">URL da loja de origem</label>
+        <input type="text" id="sourceStoreUrl" name="sourceStoreUrl" required>
+        <label for="sourcePlatformClonar">Plataforma de origem</label>
+        <select id="sourcePlatformClonar" name="sourcePlatformClonar" required>
+          <option value="shopify">Shopify</option>
+          <option value="yano">Yano</option>
+          <option value="nuvemshop">Nuvem Shop</option>
+        </select>
+        <label><input type="checkbox" id="gerarCopyIAClonar" name="gerarCopyIAClonar"> Gerar nova copy com IA</label>
+        <button type="submit" id="clonarLojaBtn">Clonar Loja Inteira</button>
+        <button type="button" id="cancelarClonarBtn" style="display:none;margin-top:10px;background:#ff7e7e;">Cancelar</button>
+      </form>
+      <div class="progress-bar-bg" id="progressBarBgClonar">
+        <div class="progress-bar" id="progressBarClonar"></div>
+      </div>
+      <div id="progressTextClonar" style="text-align:center;color:#7ecfff;font-size:15px;margin-top:8px;display:none;">Aguarde, clonando loja...</div>
+      <div id="progressDelayClonar" style="text-align:center;color:#ffb347;font-size:14px;margin-top:4px;display:none;">Isso pode levar vários minutos dependendo do tamanho da loja.</div>
+      <div id="resultClonar" class="result"></div>
+    </div>
+  </div>
+  <script>
+    // Tabs
+    const tabImportar = document.getElementById('tabImportar');
+    const tabImportarSimples = document.getElementById('tabImportarSimples');
+    const tabLojas = document.getElementById('tabLojas');
+    const tabColecao = document.getElementById('tabColecao');
+    const tabClonar = document.getElementById('tabClonar');
+    const importarSection = document.getElementById('importarSection');
+    const importarSimplesSection = document.getElementById('importarSimplesSection');
+    const lojasSection = document.getElementById('lojasSection');
+    const colecaoSection = document.getElementById('colecaoSection');
+    const clonarSection = document.getElementById('clonarSection');
+    tabImportar.onclick = () => {
+      tabImportar.classList.add('active');
+      tabImportarSimples.classList.remove('active');
+      importarSection.style.display = '';
+      importarSimplesSection.style.display = 'none';
+      tabLojas.classList.remove('active');
+      tabColecao.classList.remove('active');
+      tabClonar.classList.remove('active');
+      lojasSection.style.display = 'none';
+      colecaoSection.style.display = 'none';
+      clonarSection.style.display = 'none';
+    };
+    tabImportarSimples.onclick = () => {
+      tabImportarSimples.classList.add('active');
+      tabImportar.classList.remove('active');
+      importarSimplesSection.style.display = '';
+      importarSection.style.display = 'none';
+      tabLojas.classList.remove('active');
+      tabColecao.classList.remove('active');
+      tabClonar.classList.remove('active');
+      lojasSection.style.display = 'none';
+      colecaoSection.style.display = 'none';
+      clonarSection.style.display = 'none';
+    };
+    tabLojas.onclick = () => {
+      tabLojas.classList.add('active');
+      tabImportar.classList.remove('active');
+      tabImportarSimples.classList.remove('active');
+      tabColecao.classList.remove('active');
+      tabClonar.classList.remove('active');
+      importarSection.style.display = 'none';
+      importarSimplesSection.style.display = 'none';
+      lojasSection.style.display = '';
+      colecaoSection.style.display = 'none';
+      clonarSection.style.display = 'none';
+    };
+    tabColecao.onclick = () => {
+      tabColecao.classList.add('active');
+      tabImportar.classList.remove('active');
+      tabImportarSimples.classList.remove('active');
+      tabLojas.classList.remove('active');
+      tabClonar.classList.remove('active');
+      importarSection.style.display = 'none';
+      importarSimplesSection.style.display = 'none';
+      lojasSection.style.display = 'none';
+      colecaoSection.style.display = '';
+      clonarSection.style.display = 'none';
+    };
+    tabClonar.onclick = () => {
+      tabClonar.classList.add('active');
+      tabImportar.classList.remove('active');
+      tabImportarSimples.classList.remove('active');
+      tabLojas.classList.remove('active');
+      tabColecao.classList.remove('active');
+      importarSection.style.display = 'none';
+      importarSimplesSection.style.display = 'none';
+      lojasSection.style.display = 'none';
+      colecaoSection.style.display = 'none';
+      clonarSection.style.display = '';
+    };
+
+    // Salvar e listar lojas no localStorage
+    function getLojas() {
+      return JSON.parse(localStorage.getItem('lojasShopify') || '[]');
+    }
+    function setLojas(lojas) {
+      localStorage.setItem('lojasShopify', JSON.stringify(lojas));
+    }
+    function renderLojas() {
+      const lojas = getLojas();
+      const lojaLista = document.getElementById('lojaLista');
+      lojaLista.innerHTML = '';
+      lojas.forEach((loja, idx) => {
+        const div = document.createElement('div');
+        div.className = 'loja-item';
+        div.innerHTML = `<span class="loja-nome">${loja.nome ? loja.nome + ' - ' : ''}${loja.dominio}</span>
+          <span class="loja-btns">
+            <button onclick="removerLoja(${idx})">Remover</button>
+          </span>`;
+        lojaLista.appendChild(div);
+      });
+      // Atualiza select do formulário de importação
+      const lojaSalva = document.getElementById('lojaSalva');
+      lojaSalva.innerHTML = '<option value="">-- Nenhuma --</option>';
+      lojas.forEach((loja, idx) => {
+        const nome = loja.nome ? loja.nome + ' - ' : '';
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = nome + loja.dominio;
+        lojaSalva.appendChild(opt);
+      });
+      // Atualiza select do formulário de coleção
+      const lojaSalvaColecao = document.getElementById('lojaSalvaColecao');
+      lojaSalvaColecao.innerHTML = '<option value="">-- Nenhuma --</option>';
+      lojas.forEach((loja, idx) => {
+        const nome = loja.nome ? loja.nome + ' - ' : '';
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = nome + loja.dominio;
+        lojaSalvaColecao.appendChild(opt);
+      });
+      // Atualiza select do formulário de clonar loja
+      const lojaSalvaClonar = document.getElementById('lojaSalvaClonar');
+      lojaSalvaClonar.innerHTML = '<option value="">-- Nenhuma --</option>';
+      lojas.forEach((loja, idx) => {
+        const nome = loja.nome ? loja.nome + ' - ' : '';
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = nome + loja.dominio;
+        lojaSalvaClonar.appendChild(opt);
+      });
+      // Atualiza select do formulário de importação simples
+      const lojaSalvaSimples = document.getElementById('lojaSalvaSimples');
+      lojaSalvaSimples.innerHTML = '<option value="">-- Nenhuma --</option>';
+      lojas.forEach((loja, idx) => {
+        const nome = loja.nome ? loja.nome + ' - ' : '';
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = nome + loja.dominio;
+        lojaSalvaSimples.appendChild(opt);
+      });
+    }
+    window.removerLoja = function(idx) {
+      const lojas = getLojas();
+      lojas.splice(idx, 1);
+      setLojas(lojas);
+      renderLojas();
+    };
+    document.getElementById('lojaForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const nome = document.getElementById('lojaNome').value.trim();
+      const dominio = document.getElementById('lojaDominio').value.trim();
+      const token = document.getElementById('lojaToken').value.trim();
+      if (!dominio || !token) return;
+      const lojas = getLojas();
+      lojas.push({ nome, dominio, token });
+      setLojas(lojas);
+      renderLojas();
+      document.getElementById('lojaForm').reset();
+    });
+    document.getElementById('lojaSalva').addEventListener('change', function() {
+      const idx = this.value;
+      if (idx === '') {
+        document.getElementById('shopifyStoreUrl').value = '';
+        document.getElementById('shopifyAccessToken').value = '';
+      } else {
+        const loja = getLojas()[idx];
+        document.getElementById('shopifyStoreUrl').value = loja.dominio;
+        document.getElementById('shopifyAccessToken').value = loja.token;
+      }
+    });
+    document.getElementById('lojaSalvaColecao').addEventListener('change', function() {
+      const idx = this.value;
+      if (idx === '') {
+        document.getElementById('shopifyStoreUrlColecao').value = '';
+        document.getElementById('shopifyAccessTokenColecao').value = '';
+      } else {
+        const loja = getLojas()[idx];
+        document.getElementById('shopifyStoreUrlColecao').value = loja.dominio;
+        document.getElementById('shopifyAccessTokenColecao').value = loja.token;
+      }
+    });
+    document.getElementById('lojaSalvaClonar').addEventListener('change', function() {
+      const idx = this.value;
+      if (idx === '') {
+        document.getElementById('shopifyStoreUrlClonar').value = '';
+        document.getElementById('shopifyAccessTokenClonar').value = '';
+      } else {
+        const loja = getLojas()[idx];
+        document.getElementById('shopifyStoreUrlClonar').value = loja.dominio;
+        document.getElementById('shopifyAccessTokenClonar').value = loja.token;
+      }
+    });
+    document.getElementById('lojaSalvaSimples').addEventListener('change', function() {
+      const idx = this.value;
+      if (idx === '') {
+        document.getElementById('shopifyStoreUrlSimples').value = '';
+        document.getElementById('shopifyAccessTokenSimples').value = '';
+      } else {
+        const loja = getLojas()[idx];
+        document.getElementById('shopifyStoreUrlSimples').value = loja.dominio;
+        document.getElementById('shopifyAccessTokenSimples').value = loja.token;
+      }
+    });
+    renderLojas();
+
+    // Importação de produto
+    const formIA = document.getElementById('importFormIA');
+    const resultDivIA = document.getElementById('resultIA');
+    formIA.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      resultDivIA.textContent = 'Processando...';
+      resultDivIA.style.display = 'block';
+      const shopifyStoreUrl = document.getElementById('shopifyStoreUrl').value;
+      const shopifyAccessToken = document.getElementById('shopifyAccessToken').value;
+      const productUrl = document.getElementById('productUrl').value;
+      const sourcePlatform = document.getElementById('sourcePlatform').value;
+      try {
+        const response = await fetch('/api/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shopifyStoreUrl, shopifyAccessToken, productUrl, sourcePlatform, gerarCopyIA: true })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          resultDivIA.textContent = data.message || 'Importação concluída!';
+          resultDivIA.className = 'result';
+        } else {
+          resultDivIA.textContent = data.error || 'Erro ao importar produto';
+          resultDivIA.className = 'result error';
+        }
+      } catch (err) {
+        resultDivIA.textContent = 'Erro de conexão com o servidor.';
+        resultDivIA.className = 'result error';
+      }
+      resultDivIA.style.display = 'block';
+    });
+
+    // Importação de produto simples
+    const formSimples = document.getElementById('importFormSimples');
+    const resultDivSimples = document.getElementById('resultSimples');
+    formSimples.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      resultDivSimples.textContent = 'Processando...';
+      resultDivSimples.style.display = 'block';
+      const shopifyStoreUrl = document.getElementById('shopifyStoreUrlSimples').value;
+      const shopifyAccessToken = document.getElementById('shopifyAccessTokenSimples').value;
+      const productUrl = document.getElementById('productUrlSimples').value;
+      const sourcePlatform = document.getElementById('sourcePlatformSimples').value;
+      try {
+        const response = await fetch('/api/import-simples', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shopifyStoreUrl, shopifyAccessToken, productUrl, sourcePlatform })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          resultDivSimples.textContent = data.message || 'Importação concluída!';
+          resultDivSimples.className = 'result';
+        } else {
+          resultDivSimples.textContent = data.error || 'Erro ao importar produto';
+          resultDivSimples.className = 'result error';
+        }
+      } catch (err) {
+        resultDivSimples.textContent = 'Erro de conexão com o servidor.';
+        resultDivSimples.className = 'result error';
+      }
+      resultDivSimples.style.display = 'block';
+    });
+
+    // Importação de coleção
+    const colecaoForm = document.getElementById('colecaoForm');
+    const progressBarBgColecao = document.getElementById('progressBarBgColecao');
+    const progressBarColecao = document.getElementById('progressBarColecao');
+    const resultColecao = document.getElementById('resultColecao');
+    const progressTextColecao = document.getElementById('progressTextColecao');
+    const progressDelayColecao = document.getElementById('progressDelayColecao');
+    function animateProgressBarColecao() {
+      progressBarBgColecao.style.display = 'block';
+      progressBarColecao.style.width = '0%';
+      progressTextColecao.style.display = 'block';
+      progressTextColecao.textContent = 'Aguarde, importando produtos...';
+      progressDelayColecao.style.display = 'none';
+    }
+    function updateProgressBarColecao(percent, atual, total) {
+      progressBarColecao.style.width = percent + '%';
+      if (typeof atual !== 'undefined' && typeof total !== 'undefined') {
+        progressTextColecao.textContent = `Processando: ${atual} de ${total}`;
+      }
+    }
+    function finishProgressBarColecao() {
+      progressBarColecao.style.width = '100%';
+      setTimeout(() => {
+        progressBarBgColecao.style.display = 'none';
+        progressBarColecao.style.width = '0%';
+        progressTextColecao.style.display = 'none';
+        progressTextColecao.textContent = '';
+        progressDelayColecao.style.display = 'none';
+      }, 800);
+    }
+    document.getElementById('importarColecaoBtn').onclick = function() { canceladoColecao = false; };
+    document.getElementById('cancelarColecaoBtn').onclick = function() {
+      canceladoColecao = true;
+      resultColecao.className = 'result error';
+      resultColecao.textContent = 'Importação cancelada pelo usuário.';
+      resultColecao.style.display = 'block';
+      finishProgressBarColecao();
+      this.style.display = 'none';
+    };
+    colecaoForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      canceladoColecao = false;
+      document.getElementById('cancelarColecaoBtn').style.display = 'inline-block';
+      resultColecao.style.display = 'none';
+      resultColecao.className = 'result';
+      resultColecao.textContent = '';
+      animateProgressBarColecao();
+      // Aviso se demorar mais de 10 segundos
+      let delayTimeout = setTimeout(() => {
+        progressDelayColecao.style.display = 'block';
+      }, 10000);
+      const gerarCopyIAColecao = document.getElementById('gerarCopyIAColecao');
+      const data = {
+        shopifyStoreUrl: document.getElementById('shopifyStoreUrlColecao').value.trim(),
+        shopifyAccessToken: document.getElementById('shopifyAccessTokenColecao').value.trim(),
+        collectionUrl: document.getElementById('collectionUrl').value.trim(),
+        sourcePlatform: document.getElementById('sourcePlatformColecao').value,
+        gerarCopyIA: gerarCopyIAColecao.checked
+      };
+      try {
+        if (canceladoColecao) return;
+        clearTimeout(delayTimeout);
+        let resData = null;
+        try {
+          resData = await response.json();
+        } catch (jsonErr) {
+          resData = { error: 'Erro inesperado: resposta inválida do backend.' };
+        }
+        if (response.ok) {
+          if (resData.results && resData.results.length) {
+            for (let i = 0; i < resData.results.length; i++) {
+              if (canceladoColecao) break;
+              updateProgressBarColecao(Math.round(((i + 1) / resData.results.length) * 100), i + 1, resData.results.length);
+              await new Promise(r => setTimeout(r, 100));
+            }
+          }
+          finishProgressBarColecao();
+          const sucesso = resData.results ? resData.results.filter(r => r.success).length : 0;
+          const falha = resData.results ? resData.results.filter(r => !r.success && !r.duplicated).length : 0;
+          const duplicados = resData.results ? resData.results.filter(r => r.duplicated).length : 0;
+          resultColecao.className = 'result';
+          resultColecao.innerHTML = `Coleção importada!<br>Produtos importados: <b>${sucesso}</b><br>Duplicados: <b>${duplicados}</b><br>Falhas: <b>${falha}</b>`;
+        } else {
+          finishProgressBarColecao();
+          resultColecao.className = 'result error';
+          resultColecao.textContent = resData.error || 'Erro ao importar coleção';
+        }
+        resultColecao.style.display = 'block';
+      } catch (err) {
+        clearTimeout(delayTimeout);
+        finishProgressBarColecao();
+        resultColecao.className = 'result error';
+        resultColecao.textContent = 'Erro de conexão com a API ou resposta inválida.';
+        resultColecao.style.display = 'block';
+      } finally {
+        document.getElementById('cancelarColecaoBtn').style.display = 'none';
+      }
+    });
+
+    // Clonar Loja Inteira
+    document.getElementById('clonarLojaBtn').onclick = function() { canceladoClonar = false; };
+    document.getElementById('cancelarClonarBtn').onclick = function() {
+      canceladoClonar = true;
+      resultClonar.className = 'result error';
+      resultClonar.textContent = 'Clonagem cancelada pelo usuário.';
+      resultClonar.style.display = 'block';
+      finishProgressBarClonar();
+      this.style.display = 'none';
+    };
+    const clonarForm = document.getElementById('clonarForm');
+    const progressBarBgClonar = document.getElementById('progressBarBgClonar');
+    const progressBarClonar = document.getElementById('progressBarClonar');
+    const progressTextClonar = document.getElementById('progressTextClonar');
+    const progressDelayClonar = document.getElementById('progressDelayClonar');
+    const resultClonar = document.getElementById('resultClonar');
+    function animateProgressBarClonar() {
+      progressBarBgClonar.style.display = 'block';
+      progressBarClonar.style.width = '0%';
+      progressTextClonar.style.display = 'block';
+      progressTextClonar.textContent = 'Aguarde, clonando loja...';
+      progressDelayClonar.style.display = 'none';
+    }
+    function updateProgressBarClonar(percent, atual, total, duplicados) {
+      progressBarClonar.style.width = percent + '%';
+      if (typeof atual !== 'undefined' && typeof total !== 'undefined') {
+        progressTextClonar.textContent = `Coleções: ${atual} de ${total}` + (typeof duplicados !== 'undefined' ? ` | Duplicados: ${duplicados}` : '');
+      }
+    }
+    function finishProgressBarClonar() {
+      progressBarClonar.style.width = '100%';
+      setTimeout(() => {
+        progressBarBgClonar.style.display = 'none';
+        progressBarClonar.style.width = '0%';
+        progressTextClonar.style.display = 'none';
+        progressTextClonar.textContent = '';
+        progressDelayClonar.style.display = 'none';
+      }, 800);
+    }
+    clonarForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      canceladoClonar = false;
+      document.getElementById('cancelarClonarBtn').style.display = 'inline-block';
+      resultClonar.style.display = 'none';
+      resultClonar.className = 'result';
+      resultClonar.textContent = '';
+      animateProgressBarClonar();
+      let delayTimeout = setTimeout(() => {
+        progressDelayClonar.style.display = 'block';
+      }, 10000);
+      const gerarCopyIAClonar = document.getElementById('gerarCopyIAClonar');
+      const data = {
+        shopifyStoreUrl: document.getElementById('shopifyStoreUrlClonar').value.trim(),
+        shopifyAccessToken: document.getElementById('shopifyAccessTokenClonar').value.trim(),
+        sourceStoreUrl: document.getElementById('sourceStoreUrl').value.trim(),
+        sourcePlatform: document.getElementById('sourcePlatformClonar').value,
+        gerarCopyIA: gerarCopyIAClonar.checked
+      };
+      try {
+        const response = await fetch('/api/clone-store', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        clearTimeout(delayTimeout);
+        let resData = null;
+        try {
+          resData = await response.json();
+        } catch (jsonErr) {
+          resData = { error: 'Erro inesperado: resposta inválida do backend.' };
+        }
+        if (response.ok) {
+          if (resData.results && resData.results.length) {
+            let duplicados = 0;
+            for (let i = 0; i < resData.results.length; i++) {
+              if (canceladoClonar) break;
+              const colecao = resData.results[i];
+              const totalProdutos = colecao.results ? colecao.results.length : 0;
+              const duplicadosColecao = colecao.results ? colecao.results.filter(r => r.duplicated).length : 0;
+              duplicados += duplicadosColecao;
+              updateProgressBarClonar(Math.round(((i + 1) / resData.results.length) * 100), i + 1, resData.results.length, duplicados);
+              await new Promise(r => setTimeout(r, 200));
+            }
+          }
+          finishProgressBarClonar();
+          const totalColecoes = resData.results ? resData.results.length : 0;
+          const totalProdutos = resData.results ? resData.results.reduce((acc, c) => acc + (c.results ? c.results.length : 0), 0) : 0;
+          const totalDuplicados = resData.results ? resData.results.reduce((acc, c) => acc + (c.results ? c.results.filter(r => r.duplicated).length : 0), 0) : 0;
+          const totalFalhas = resData.results ? resData.results.reduce((acc, c) => acc + (c.results ? c.results.filter(r => !r.success && !r.duplicated).length : 0), 0) : 0;
+          resultClonar.className = 'result';
+          resultClonar.innerHTML = `Loja clonada!<br>Coleções: <b>${totalColecoes}</b><br>Produtos importados: <b>${totalProdutos - totalDuplicados - totalFalhas}</b><br>Duplicados: <b>${totalDuplicados}</b><br>Falhas: <b>${totalFalhas}</b>`;
+        } else {
+          finishProgressBarClonar();
+          resultClonar.className = 'result error';
+          resultClonar.textContent = resData.error || 'Erro ao clonar loja';
+        }
+        resultClonar.style.display = 'block';
+      } catch (err) {
+        clearTimeout(delayTimeout);
+        finishProgressBarClonar();
+        resultClonar.className = 'result error';
+        resultClonar.textContent = 'Erro de conexão com a API ou resposta inválida.';
+        resultClonar.style.display = 'block';
+      } finally {
+        document.getElementById('cancelarClonarBtn').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html> 

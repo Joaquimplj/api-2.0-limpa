@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Testar Ajuste de Imagens na Copy</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    textarea { width: 100%; min-height: 100px; margin-bottom: 10px; }
+    input, button { padding: 8px; margin-bottom: 10px; }
+    #resultado { margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 4px; background: #f8f8f8; }
+  </style>
+</head>
+<body>
+  <h1>Testar Ajuste de Imagens na Copy</h1>
+  <label>Copy da IA (HTML):</label>
+  <textarea id="copyIA" placeholder="Cole aqui a descrição gerada pela IA..."></textarea>
+
+  <label>Copy Original (HTML):</label>
+  <textarea id="copyOriginal" placeholder="Cole aqui a descrição original..."></textarea>
+
+  <label>Palavras-chave para busca (opcional):</label>
+  <input id="keywords" type="text" placeholder="Ex: lanterna de cabeça, outdoor, led" />
+
+  <button onclick="ajustarImagens()">Ajustar Imagens</button>
+
+  <div id="resultado"></div>
+
+  <script>
+    async function ajustarImagens() {
+      const copyIA = document.getElementById('copyIA').value;
+      const copyOriginal = document.getElementById('copyOriginal').value;
+      const keywords = document.getElementById('keywords').value;
+      document.getElementById('resultado').innerHTML = 'Processando...';
+      const response = await fetch('/api/ajustar-imagens-copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ copyIA, copyOriginal, keywords })
+      });
+      const data = await response.json();
+      if (data.copyFinal) {
+        document.getElementById('resultado').innerHTML = '<h3>Resultado:</h3>' + data.copyFinal;
+      } else {
+        document.getElementById('resultado').innerHTML = '<b>Erro:</b> ' + (data.error || 'Erro desconhecido');
+      }
+    }
+  </script>
+</body>
+</html> 

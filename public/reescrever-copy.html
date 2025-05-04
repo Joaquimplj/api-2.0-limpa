@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reescrever Descrição de Produto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reescrever Descrição de Produto</h1>
+    
+    <div class="form-group">
+        <label for="shopifyStoreUrl">URL da Loja Shopify:</label>
+        <input type="text" id="shopifyStoreUrl" placeholder="ex: sua-loja.myshopify.com">
+    </div>
+
+    <div class="form-group">
+        <label for="shopifyAccessToken">Token de Acesso Shopify:</label>
+        <input type="text" id="shopifyAccessToken" placeholder="seu-token-de-acesso">
+    </div>
+
+    <div class="form-group">
+        <label for="productId">ID do Produto:</label>
+        <input type="text" id="productId" placeholder="ID do produto na Shopify">
+    </div>
+
+    <button onclick="reescreverCopy()">Reescrever Descrição</button>
+
+    <div id="loading" class="loading">
+        Processando... Por favor, aguarde.
+    </div>
+
+    <div id="result" class="result" style="display: none;">
+        <h3>Resultado:</h3>
+        <div id="resultContent"></div>
+    </div>
+
+    <script>
+        async function reescreverCopy() {
+            const shopifyStoreUrl = document.getElementById('shopifyStoreUrl').value;
+            const shopifyAccessToken = document.getElementById('shopifyAccessToken').value;
+            const productId = document.getElementById('productId').value;
+
+            if (!shopifyStoreUrl || !shopifyAccessToken || !productId) {
+                alert('Por favor, preencha todos os campos');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/reescrever-copy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        shopifyStoreUrl,
+                        shopifyAccessToken,
+                        productId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('resultContent').innerHTML = `
+                        <p><strong>Mensagem:</strong> ${data.message}</p>
+                        <p><strong>Produto Atualizado:</strong></p>
+                        <pre>${JSON.stringify(data.product, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('resultContent').innerHTML = `
+                        <p><strong>Erro:</strong> ${data.error}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('resultContent').innerHTML = `
+                    <p><strong>Erro:</strong> ${error.message}</p>
+                `;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html> 
