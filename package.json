@@ -8,6 +8,7 @@
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
+    "@huggingface/inference": "^3.11.0",
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
